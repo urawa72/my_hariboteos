@@ -4,14 +4,14 @@ DEL		= rm -rf
 default:
 	$(MAKE) img
 
-ipl10.bin: ipl10.nas Makefile
-	nasm ipl10.nas -o ipl10.bin -l ipl10.lst
+ipl10.bin: ipl10.asm Makefile
+	nasm ipl10.asm -o ipl10.bin -l ipl10.lst
 
-asmhead.bin: asmhead.nas Makefile
-	nasm asmhead.nas -o asmhead.bin -l asmhead.lst
+asmhead.bin: asmhead.asm Makefile
+	nasm asmhead.asm -o asmhead.bin -l asmhead.lst
 
-nasmfunc.o: nasmfunc.nas Makefile
-	nasm -g -f elf nasmfunc.nas -o nasmfunc.o
+nasmfunc.o: nasmfunc.asm Makefile
+	nasm -g -f elf nasmfunc.asm -o nasmfunc.o
 
 haribote.hrb: bootpack.c hrb.ld nasmfunc.o Makefile
 	gcc -march=i486 -m32 -fno-pie -nostdlib -T hrb.ld -g bootpack.c nasmfunc.o -o bootpack.hrb
