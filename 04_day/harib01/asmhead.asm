@@ -112,19 +112,16 @@ memcpy:
 		SUB		ECX,1
 		JNZ		memcpy
 		RET
-
-		ALIGNB	16
+		ALIGNB	16,	DB	0
 
 GDT0:
-		RESB	8
+ 		TIMES	8 DB 0
 		DW		0xffff,0x0000,0x9200,0x00cf
 		DW		0xffff,0x0000,0x9a28,0x0047
-
 		DW		0
 
 GDTR0:
 		DW		8*3-1
 		DD		GDT0
-
-		ALIGNB	16
+		ALIGNB	16,	DB	0
 bootpack:

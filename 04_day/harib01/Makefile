@@ -11,10 +11,10 @@ asmhead.bin: asmhead.asm Makefile
 	nasm asmhead.asm -o asmhead.bin -l asmhead.lst
 
 nasmfunc.o: nasmfunc.asm Makefile
-	nasm -g -f elf nasmfunc.asm -o nasmfunc.o
+	nasm -g -f elf nasmfunc.asm -o nasmfunc.o -l nasmfunc.lst
 
-haribote.hrb: bootpack.c hrb.ld nasmfunc.o Makefile
-	gcc -march=i486 -m32 -fno-pie -nostdlib -T hrb.ld -g bootpack.c nasmfunc.o -o bootpack.hrb
+haribote.hrb: bootpack.c os.lds nasmfunc.o Makefile
+	gcc -march=i486 -m32 -fno-pie -nostdlib -T os.lds -g bootpack.c nasmfunc.o -o bootpack.hrb
 
 haribote.sys : asmhead.bin haribote.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
@@ -29,8 +29,11 @@ asm:
 img:
 	$(MAKE) haribote.img
 
+build-with-docker:
+	docker build -t haribos .
+	docker run -v `pwd`:/haribos haribos make img
+
 run:
-	$(MAKE) img
 	qemu-system-i386 -drive file=haribote.img,format=raw,if=floppy -boot a
 
 clean:
