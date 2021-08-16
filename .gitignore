@@ -3,3 +3,5 @@ HariboteOS
 *.lst
 *.img
 *.sys
+*.hrb
+*.o
