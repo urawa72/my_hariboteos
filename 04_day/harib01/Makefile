@@ -29,9 +29,9 @@ asm:
 img:
 	$(MAKE) haribote.img
 
-build-with-docker:
-	docker build -t haribos .
-	docker run -v `pwd`:/haribos haribos make img
+build:
+	sudo docker build -t haribos .
+	sudo docker run --rm -v `pwd`:/haribos haribos:latest make img
 
 run:
 	qemu-system-i386 -drive file=haribote.img,format=raw,if=floppy -boot a
