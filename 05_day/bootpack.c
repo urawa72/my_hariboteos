@@ -35,14 +35,16 @@ struct BOOTINFO {
 
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
-	static char font_A[16] = {
-		0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-		0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-	};
+  extern char hankaku[4096];
 
   init_palette();
-	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-	putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
+  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+	putfont8(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, hankaku + 'A' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, hankaku + 'B' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 24, 8, COL8_FFFFFF, hankaku + 'C' * 16);
+  putfont8(binfo->vram, binfo->scrnx, 40, 8, COL8_FFFFFF, hankaku + '1' * 16);
+  putfont8(binfo->vram, binfo->scrnx, 48, 8, COL8_FFFFFF, hankaku + '2' * 16);
+  putfont8(binfo->vram, binfo->scrnx, 56, 8, COL8_FFFFFF, hankaku + '3' * 16);
 
   for (;;) {
     io_hlt();
@@ -118,19 +120,35 @@ void init_screen(char *vram, int x, int y) {
 }
 
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font) {
-	int i;
-	char *p, d;
-	for (i = 0; i < 16; i++) {
-		p = vram + (y + i) * xsize + x;
-		d = font[i];
-		if ((d & 0x80) != 0) { p[0] = c; }
-		if ((d & 0x40) != 0) { p[1] = c; }
-		if ((d & 0x20) != 0) { p[2] = c; }
-		if ((d & 0x10) != 0) { p[3] = c; }
-		if ((d & 0x08) != 0) { p[4] = c; }
-		if ((d & 0x04) != 0) { p[5] = c; }
-		if ((d & 0x02) != 0) { p[6] = c; }
-		if ((d & 0x01) != 0) { p[7] = c; }
-	}
-	return;
+  int i;
+  char *p, d;
+  for (i = 0; i < 16; i++) {
+    p = vram + (y + i) * xsize + x;
+    d = font[i];
+    if ((d & 0x80) != 0) {
+      p[0] = c;
+    }
+    if ((d & 0x40) != 0) {
+      p[1] = c;
+    }
+    if ((d & 0x20) != 0) {
+      p[2] = c;
+    }
+    if ((d & 0x10) != 0) {
+      p[3] = c;
+    }
+    if ((d & 0x08) != 0) {
+      p[4] = c;
+    }
+    if ((d & 0x04) != 0) {
+      p[5] = c;
+    }
+    if ((d & 0x02) != 0) {
+      p[6] = c;
+    }
+    if ((d & 0x01) != 0) {
+      p[7] = c;
+    }
+  }
+  return;
 }

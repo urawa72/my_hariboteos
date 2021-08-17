@@ -5,3 +5,5 @@ HariboteOS
 *.sys
 *.hrb
 *.o
+hankaku.c
+convHankakuTxt
