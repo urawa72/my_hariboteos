@@ -1,13 +1,15 @@
-FROM alpine:3.10
+FROM ubuntu:20.04
 
-ENV IMAGE_NAME=haribote-os
+RUN apt update && \
+  apt install -y \
+	  build-essential \
+	  gcc-7 \
+		mtools \
+		nasm
 
-RUN apk update && \
-    apk --no-cache add \
-        build-base \
-        nasm \
-        mtools
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 && \
+  update-alternatives --config gcc
 
 WORKDIR /haribos
 
-CMD ["/bin/ash"]
+CMD ["/bin/bash"]

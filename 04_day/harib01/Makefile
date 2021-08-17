@@ -1,5 +1,6 @@
-MAKE	= make -r
-DEL		= rm -rf
+MAKE		= make -r
+DEL			= rm -rf
+DOCKER	= sudo docker
 
 default:
 	$(MAKE) img
@@ -29,12 +30,12 @@ asm:
 img:
 	$(MAKE) haribote.img
 
-build:
-	sudo docker build -t haribos .
-	sudo docker run --rm -v `pwd`:/haribos haribos:latest make img
-
 run:
+	$(DOCKER) run --rm -v `pwd`:/haribos haribos:latest make img
 	qemu-system-i386 -drive file=haribote.img,format=raw,if=floppy -boot a
+
+build_docker_image:
+	$(DOCKER) build -t haribos .
 
 clean:
 	-$(DEL) *.bin
