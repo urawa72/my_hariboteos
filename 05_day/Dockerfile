@@ -5,7 +5,8 @@ RUN apt update && \
 	  build-essential \
 	  gcc-7 \
 		mtools \
-		nasm
+		nasm \
+		gcc-multilib
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 && \
   update-alternatives --config gcc

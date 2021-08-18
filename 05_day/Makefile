@@ -20,8 +20,8 @@ convHankakuTxt: convHankakuTxt.c
 hankaku.c: hankaku.txt convHankakuTxt
 	./convHankakuTxt
 
-haribote.hrb: bootpack.c os.lds nasmfunc.o hankaku.c Makefile
-	gcc -march=i486 -m32 -fno-pie -nostdlib -T os.lds -g bootpack.c hankaku.c nasmfunc.o -o bootpack.hrb
+haribote.hrb: bootpack.c os.lds nasmfunc.o hankaku.c mysprintf.o Makefile
+	gcc -march=i486 -m32 -fno-pie -nostdlib -T os.lds -g bootpack.c hankaku.c mysprintf.o nasmfunc.o -o bootpack.hrb
 
 haribote.sys : asmhead.bin haribote.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
@@ -35,10 +35,14 @@ asm:
 
 img:
 	$(MAKE) haribote.img
+	@chmod 777 haribote.img
 
 run:
 	$(DOCKER) run --rm -v `pwd`:/haribos haribos:latest make img
 	qemu-system-i386 -drive file=haribote.img,format=raw,if=floppy -boot a
+
+%.o: %.c
+	gcc -c -m32 -fno-pic -nostdlib -o $*.o $*.c
 
 build_docker_image:
 	$(DOCKER) build -t haribos .
