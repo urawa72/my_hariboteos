@@ -98,7 +98,7 @@ asm_inthandler21:
 		POP		EAX
 		POPAD
 		POP		DS
-		POP		ESP
+		POP		ES
 		IRETD
 
 asm_inthandler27
@@ -130,5 +130,5 @@ asm_inthandler2c:
 		POP		EAX
 		POPAD
 		POP		DS
-		POP		ESP
+		POP		ES
 		IRETD
