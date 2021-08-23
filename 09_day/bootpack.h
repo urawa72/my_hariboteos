@@ -7,7 +7,7 @@ struct BOOTINFO {
   short scrnx, scrny;
   char *vram;
 };
-#define ADR_BOOTINFO	0x00000ff0
+#define ADR_BOOTINFO 0x00000ff0
 
 /* nasmfunc.asm */
 void io_hlt(void);
@@ -26,8 +26,8 @@ void asm_inthandler2c(void);
 
 /* fifo8.c */
 struct FIFO8 {
-	unsigned char *buf;
-	int p, q, size, free, flags;
+  unsigned char *buf;
+  int p, q, size, free, flags;
 };
 void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
 int fifo8_put(struct FIFO8 *fifo, unsigned char data);
@@ -76,20 +76,18 @@ struct GATE_DESCRIPTOR {
 void init_gdtidt(void);
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
-#define ADR_IDT			0x0026f800
-#define LIMIT_IDT		0x000007ff
-#define ADR_GDT			0x00270000
-#define LIMIT_GDT		0x0000ffff
-#define ADR_BOTPAK		0x00280000
-#define LIMIT_BOTPAK	0x0007ffff
-#define AR_DATA32_RW	0x4092
-#define AR_CODE32_ER	0x409a
-#define AR_INTGATE32	0x008e
+#define ADR_IDT 0x0026f800
+#define LIMIT_IDT 0x000007ff
+#define ADR_GDT 0x00270000
+#define LIMIT_GDT 0x0000ffff
+#define ADR_BOTPAK 0x00280000
+#define LIMIT_BOTPAK 0x0007ffff
+#define AR_DATA32_RW 0x4092
+#define AR_CODE32_ER 0x409a
+#define AR_INTGATE32 0x008e
 
 /* int.c */
 void init_pic(void);
-void inthandler21(int *esp);
-void inthandler2c(int *esp);
 void inthandler27(int *esp);
 #define PIC0_ICW1 0x0020
 #define PIC0_OCW2 0x0020
@@ -103,3 +101,21 @@ void inthandler27(int *esp);
 #define PIC1_ICW2 0x00a1
 #define PIC1_ICW3 0x00a1
 #define PIC1_ICW4 0x00a1
+
+/* keyboard.c */
+void inthandler21(int *esp);
+void wait_KBC_sendready(void);
+void init_keyboard(void);
+extern struct FIFO8 keyfifo;
+#define PORT_KEYDAT 0x0060
+#define PORT_KEYCMD 0x0064
+
+/* mouse.c */
+struct MOUSE_DEC {
+  unsigned char buf[3], phase;
+  int x, y, btn;
+};
+void inthandler2c(int *esp);
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+extern struct FIFO8 mousefifo;
