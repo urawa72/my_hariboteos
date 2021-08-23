@@ -29,7 +29,7 @@ hankaku.c: hankaku.txt convHankakuTxt
 	./convHankakuTxt
 
 bootpack.hrb: $(OBJS_BOOTPACK) os.lds
-	ld -m elf_i386 -T os.lds $(OBJS_BOOTPACK) -o $@
+	gcc $(CFLAGS) -march=i486 -T os.lds -g $(OBJS_BOOTPACK) -o $@
 
 haribote.sys : asmhead.bin bootpack.hrb
 	cat asmhead.bin bootpack.hrb > haribote.sys
