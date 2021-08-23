@@ -68,6 +68,26 @@ void HariMain(void) {
           }
           boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 15 * 8 - 1, 31);
           putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+
+          boxfill8(binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx + 15, my + 15);
+          mx += mdec.x;
+          my += mdec.y;
+          if (mx < 0) {
+            mx = 0;
+          }
+          if (my < 0) {
+            my = 0;
+          }
+          if (mx > binfo->scrnx - 16) {
+            mx = binfo->scrnx - 16;
+          }
+          if (my > binfo->scrny - 16) {
+            my = binfo->scrny - 16;
+          }
+					my_sprintf(s, "(%d %d)", mx, my);
+					boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 79, 15);
+					putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+					putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
         }
       }
     }
@@ -106,7 +126,7 @@ void enable_mouse(struct MOUSE_DEC *mdec) {
   io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
   wait_KBC_sendready();
   io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
-	mdec->phase = 0;
+  mdec->phase = 0;
   return;
 }
 
