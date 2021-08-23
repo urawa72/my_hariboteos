@@ -1,13 +1,30 @@
 #include "bootpack.h"
 
+#define MEMMAN_FREES 4090
+#define MEMMAN_ADDR 0x003c0000
+
+struct FREEINFO {
+  unsigned int addr, size;
+};
+
+struct MEMMAN {
+  int frees, maxfrees, lostsize, losts;
+  struct FREEINFO free[MEMMAN_FREES];
+};
+
 unsigned int memtest(unsigned int start, unsigned int end);
-unsigned int memtest_sub(unsigned int start, unsigned int end);
+void memman_init(struct MEMMAN *man);
+unsigned int memman_total(struct MEMMAN *man);
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);
 
 void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   char s[40], mcursor[256], keybuf[32], mousebuf[128];
   int mx, my, i;
+  unsigned int memtotal;
   struct MOUSE_DEC mdec;
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
 
   // initialize IDT/PIC
   init_gdtidt();
@@ -24,6 +41,11 @@ void HariMain(void) {
   init_keyboard();
   enable_mouse(&mdec);
 
+  memtotal = memtest(0x00400000, 0xbfffffff);
+  memman_init(memman);
+  memman_free(memman, 0x00001000, 0x0009e000);  // 0x0001000 - 0x0009effff
+  memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
   init_palette();
   init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
   mx = (binfo->scrnx - 16) / 2;
@@ -33,9 +55,8 @@ void HariMain(void) {
   my_sprintf(s, "(%d %d)", mx, my);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
-	i = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
-	my_sprintf(s, "memory %dMB", i);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+  my_sprintf(s, "memory %dMB   free: %dKB", memtotal / (1024 * 1024), memman_total(memman) / 1024);
+  putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
   for (;;) {
     io_cli();
@@ -122,4 +143,101 @@ unsigned int memtest(unsigned int start, unsigned int end) {
   }
 
   return i;
+}
+
+void memman_init(struct MEMMAN *man) {
+  man->frees    = 0;  // number of free info
+  man->maxfrees = 0;  // for observing the situation
+  man->lostsize = 0;  // total size of failed releases
+  man->losts    = 0;  // number of failed releases
+  return;
+}
+
+unsigned int memman_total(struct MEMMAN *man) {
+  unsigned int i, t = 0;
+  for (i = 0; i < man->frees; i++) {
+    t += man->free[i].size;
+  }
+  return t;
+}
+
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size) {
+  unsigned int i, a;
+  for (i = 0; i < man->frees; i++) {
+    // discover enough space
+    if (man->free[i].size >= size) {
+      a = man->free[i].addr;
+      man->free[i].addr += size;
+      man->free[i].size -= size;
+      if (man->free[i].size == 0) {
+        // free[i] is used, pack it in front
+        man->frees--;
+        for (; i < man->frees; i++) {
+          man->free[i] = man->free[i + 1];
+        }
+      }
+      return a;
+    }
+  }
+  // free spac is none
+  return 0;
+}
+
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size) {
+  int i, j;
+  for (i = 0; i < man->frees; i++) {
+    if (man->free[i].addr > addr) {
+      break;
+    }
+  }
+
+  // free[i - 1].addr < addr < free[i].addr
+
+	// exists front
+  if (i > 0) {
+		// can release front
+    if (man->free[i - 1].addr + man->free[i - 1].size == addr) {
+      man->free[i - 1].size += size;
+			// can release back
+      if (i < man->frees) {
+        if (addr + size == man->free[i].addr) {
+          man->free[i - 1].size += man->free[i].size;
+          man->frees--;
+          for (; i < man->frees; i++) {
+            man->free[i] = man->free[i + 1];
+          }
+        }
+      }
+      return 0; // success
+    }
+  }
+
+  // cannot release front
+  if (i < man->frees) {
+		// exists back
+    if (addr + size == man->free[i].addr) {
+      man->free[i].addr = addr;
+      man->free[i].size += size;
+      return 0; // success
+    }
+  }
+
+  // cannot release front and back
+  if (man->frees < MEMMAN_FREES) {
+    for (j = man->frees; j > i; j--) {
+      man->free[j] = man->free[j - 1];
+    }
+    man->frees++;
+    if (man->maxfrees < man->frees) {
+      man->maxfrees = man->frees;
+    }
+    man->free[i].addr = addr;
+    man->free[i].size = size;
+    return 0; // success
+  }
+
+  // cannot release back
+  man->losts++;
+  man->lostsize += size;
+  return -1;  // fail
 }
