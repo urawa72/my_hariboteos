@@ -57,7 +57,7 @@ img:
 
 run:
 	$(DOCKER) run --rm -v `pwd`:/haribos haribos:latest make img
-	qemu-system-i386 -drive file=haribote.img,format=raw,if=floppy -boot a
+	qemu-system-i386 -m 32M -drive file=haribote.img,format=raw,if=floppy -boot a
 
 clean:
 	-$(DEL) *.bin

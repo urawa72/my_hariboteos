@@ -40,7 +40,7 @@ configured with the following options: enable-xdf disable-vold disable-new-vold 
 
 ## 作業メモ
 
-### day04
+### 04_day
 
 `gcc`のバージョンが9系だと以下のエラーが発生した。
 ```
@@ -70,3 +70,7 @@ mformat -f 1440 -C -B ipl10.bin -i haribote.img ::
 mcopy -i haribote.img haribote.sys ::
 make[1]: Leaving directory '/haribos'
 ```
+
+### 09_day
+
+qemuに「memory 128MB」と表示される。これはqemuのデフォルトのメモリ量が128MBのため。任意の値は`-m 32M`のように指定できる。
