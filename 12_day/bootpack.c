@@ -6,7 +6,7 @@ void HariMain(void) {
   struct BOOTINFO *binfo = (struct BOOTINFO *)ADR_BOOTINFO;
   char s[40], keybuf[32], mousebuf[128];
   int mx, my, i;
-  unsigned int memtotal, count = 0;
+  unsigned int memtotal;
   struct MOUSE_DEC mdec;
   struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
   struct SHTCTL *shtctl;
@@ -16,18 +16,16 @@ void HariMain(void) {
   // initialize IDT/PIC
   init_gdtidt();
   init_pic();
-
-  // release CPU interrupt prohibition
-  io_sti();
-
+  io_sti(); // release CPU interrupt prohibition
   fifo8_init(&keyfifo, 32, keybuf);
   fifo8_init(&mousefifo, 128, mousebuf);
 	init_pit();
-  io_out8(PIC0_IMR, 0xf9);  // allow PIC1 keyboard (11111001)
+  io_out8(PIC0_IMR, 0xf8);  // allow PIT and PIC1 keyboard (11111000)
   io_out8(PIC1_IMR, 0xef);  // allow mouse (11101111)
 
   init_keyboard();
   enable_mouse(&mdec);
+
   memtotal = memtest(0x00400000, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, 0x00001000, 0x0009e000);  // 0x0001000 - 0x0009effff
@@ -61,8 +59,7 @@ void HariMain(void) {
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
   for (;;) {
-    count++;
-    my_sprintf(s, "%d", count);
+    my_sprintf(s, "%d", timerctl.count);
     boxfill8(buf_win, 160, COL8_C6C6C6, 40, 28, 119, 43);
     putfonts8_asc(buf_win, 160, 40, 28, COL8_000000, s);
     sheet_refresh(sht_win, 40, 28, 120, 44);

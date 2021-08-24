@@ -5,7 +5,7 @@
 // ICW: initial control word
 void init_pic() {
   io_out8(PIC0_IMR, 0xff);  // reject all interrupt
-  io_out8(PIC1_IMR, 0x44);  // reject all interrupt
+  io_out8(PIC1_IMR, 0xff);  // reject all interrupt
 
   io_out8(PIC0_ICW1, 0x11);    // edge trigger mode
   io_out8(PIC0_ICW2, 0x20);    // IRQ0-7 receive INT20-27

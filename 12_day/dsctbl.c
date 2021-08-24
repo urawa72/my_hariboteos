@@ -6,7 +6,7 @@ void init_gdtidt(void) {
   int i;
 
   // initialize GDT
-  for (i = 0; i < LIMIT_GDT / 8; i++) {
+  for (i = 0; i <= LIMIT_GDT / 8; i++) {
     set_segmdesc(gdt + i, 0, 0, 0);
   }
   set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, AR_DATA32_RW);
@@ -14,13 +14,13 @@ void init_gdtidt(void) {
   load_gdtr(LIMIT_GDT, ADR_GDT);
 
   // initialize IDT
-  for (i = 0; i < 256; i++) {
+  for (i = 0; i <= LIMIT_IDT; i++) {
     set_gatedesc(idt + 1, 0, 0, 0);
   }
   load_idtr(LIMIT_IDT, ADR_IDT);
 
 	// setting IDT
-	set_segmdesc(idt + 0x20, (int) asm_inthandler20, 2 << 3, AR_INTGATE32);
+	set_segmdesc(idt + 0x20, (int) asm_inthandler20, 2 * 8, AR_INTGATE32);
 	set_segmdesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);
 	set_segmdesc(idt + 0x27, (int) asm_inthandler27, 2 * 8, AR_INTGATE32);
 	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 16, AR_INTGATE32);
