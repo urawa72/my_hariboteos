@@ -46,8 +46,7 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 extern void my_sprintf(char *str, const char *fmt, ...);
 void init_mouse_cursor8(char *mouse, char bc);
-void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf,
-                 int bxsize);
+void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize);
 #define COL8_000000 0
 #define COL8_FF0000 1
 #define COL8_00FF00 2
@@ -144,15 +143,15 @@ int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);
 /* sheet.c */
 #define MAX_SHEETS 256
 struct SHEET {
-	unsigned char *buf;
-	int bxsize, bysize, vx0, vy0, col_inv, height, flags;
-	struct SHTCTL *ctl;
+  unsigned char *buf;
+  int bxsize, bysize, vx0, vy0, col_inv, height, flags;
+  struct SHTCTL *ctl;
 };
 struct SHTCTL {
-	unsigned char *vram;
-	int xsize, ysize, top;
-	struct SHEET *sheets[MAX_SHEETS]; // sheets order
-	struct SHEET sheets0[MAX_SHEETS];
+  unsigned char *vram, *map;
+  int xsize, ysize, top;
+  struct SHEET *sheets[MAX_SHEETS];  // sheets order
+  struct SHEET sheets0[MAX_SHEETS];
 };
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);
