@@ -3,6 +3,7 @@
 ## 環境
 
 以下の環境で作業する。
+
 ```
 $ lsb_release -a
 No LSB modules are available.
@@ -16,6 +17,7 @@ Docker version 20.10.8, build 3967b7d
 ```
 
 必要なツールをインストールする。
+
 ```
 $ sudo apt install -y ghex build-essential qemu-kvm nasm mtools
 
@@ -37,12 +39,12 @@ mtools (GNU mtools) 4.0.24
 configured with the following options: enable-xdf disable-vold disable-new-vold disable-debug enable-raw-term
 ```
 
-
 ## 作業メモ
 
 ### 04_day
 
-`gcc`のバージョンが9系だと以下のエラーが発生した。
+`gcc`のバージョンが 9 系だと以下のエラーが発生した。
+
 ```
 make -r haribote.img
 make[1]: Entering directory '/home/urawa72/repos/github.com/urawa72/my_hariboteos/04_day/harib01'
@@ -57,7 +59,8 @@ make[1]: Leaving directory '/home/urawa72/repos/github.com/urawa72/my_hariboteos
 make: *** [Makefile:31: img] Error 2
 ```
 
-解決策がわからないため、gccのバージョンを7系まで下げたDockerコンテナでビルドすることにした。
+解決策がわからないため、gcc のバージョンを 7 系まで下げた Docker コンテナでビルドすることにした。
+
 ```
 make -r haribote.img
 make[1]: Entering directory '/haribos'
@@ -73,23 +76,22 @@ make[1]: Leaving directory '/haribos'
 
 ### 09_day
 
-qemuに「memory 128MB」と表示される。これはqemuのデフォルトのメモリ量が128MBのため。任意の値は`-m 32M`のように指定できる。
-
+qemu に「memory 128MB」と表示される。これは qemu のデフォルトのメモリ量が 128MB のため。任意の値は`-m 32M`のように指定できる。
 
 ### 13_day
 
-harib10cでベンチマークを取るためのコードに修正してqemuで動かしたところ、画面は表示されるがタイマーやマウスが動かなくなった。
+harib10c でベンチマークを取るためのコードに修正して qemu で動かしたところ、画面は表示されるがタイマーやマウスが動かなくなった。
 
-どうやら、`bootstap.c`のfor文無限ループから文字列出力をなくすと上記の現象が発生するよう。10秒タイマーで出力していたcountの値をfor文の先頭で出力するようにした。根本的な解決策は不明のまま。
+`bootstap.c`の無限ループから文字列出力をなくすと上記の現象が発生するようになった。そのため、10 秒タイマーで出力していた count の値を for 文の先頭で出力するようにした。根本的な解決策は不明のまま。
 
 ```c
 for(;;) {
-	count++;
-	// 以下を追加
-	my_sprintf(s, "%d", count);
-	putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
+  count++;
+  // NOTE: The screen freeses without thw following code
+  my_sprintf(s, "");
+  putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 1);
 
-	io_cli();
-	...
+  io_cli();
+  ...
 }
 ```
