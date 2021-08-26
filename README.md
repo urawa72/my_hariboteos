@@ -74,3 +74,22 @@ make[1]: Leaving directory '/haribos'
 ### 09_day
 
 qemuに「memory 128MB」と表示される。これはqemuのデフォルトのメモリ量が128MBのため。任意の値は`-m 32M`のように指定できる。
+
+
+### 13_day
+
+harib10cでベンチマークを取るためのコードに修正してqemuで動かしたところ、画面は表示されるがタイマーやマウスが動かなくなった。
+
+どうやら、`bootstap.c`のfor文無限ループから文字列出力をなくすと上記の現象が発生するよう。10秒タイマーで出力していたcountの値をfor文の先頭で出力するようにした。根本的な解決策は不明のまま。
+
+```c
+for(;;) {
+	count++;
+	// 以下を追加
+	my_sprintf(s, "%d", count);
+	putfonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
+
+	io_cli();
+	...
+}
+```
