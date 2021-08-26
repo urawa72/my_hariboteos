@@ -1,6 +1,14 @@
 ; haribote-os
 ; TAB=4
 
+VBEMODE	EQU	0x105 ; 1024 x 768 x 8bit color
+; display mode list
+;	0x100:  640 x  400 x 8bit color
+;	0x101:  640 x  480 x 8bit color
+;	0x103:  800 x  600 x 8bit color
+;	0x105: 1024 x  768 x 8bit color
+;	0x107: 1280 x 1024 x 8bit color
+
 BOTPAK	EQU		0x00280000
 DSKCAC	EQU		0x00100000
 DSKCAC0	EQU		0x00008000
@@ -15,18 +23,62 @@ VRAM	EQU	0x0ff8
 
 		ORG		0xc200
 
-; display
-		MOV		BX,0x4101 ; VBE 640x480x8bit color
-		MOV		AH,0x4f02
+; check exists VBE
+		MOV		AX,0x9000
+		MOV		ES,AX
+		MOV		DI,0
+		MOV		AX,0x4f00
+		INT		0x10
+		CMP		AX,0x004f
+		JNE		scrn320
+
+; check VBE version
+		MOV		AX,[ES:DI+4]
+		CMP		AX,0x0200
+		JB		scrn320 ; if (AX < 0x0200) goto scrn320
+
+; get display mode info
+		MOV		CX,VBEMODE
+		MOV		AX,0x4f01
+		INT		0x10
+		CMP		AX,0x004f
+		JNE		scrn320
+
+; check display mode info
+		CMP		BYTE [ES:DI+0x19],8
+		JNE		scrn320
+		CMP		BYTE [ES:DI+0x1b],4
+		JNE		scrn320
+		MOV		AX,[ES:DI+0x00]
+		AND		AX,0x0080
+		JZ		scrn320
+
+; change display mode
+		MOV		BX,VBEMODE+0x4000
+		MOV		AX,0x4f02
 		INT		0x10
 		MOV		BYTE [VMODE],8
-		MOV		WORD [SCRNX],640
-		MOV		WORD [SCRNY],480
-		MOV		DWORD [VRAM],0xe0000000
+		MOV		AX,[ES:DI+0x12]
+		MOV		[SCRNX],AX
+		MOV		AX,[ES:DI+0x14]
+		MOV		[SCRNY],AX
+		MOV		EAX,[ES:DI+0x28]
+		MOV		[VRAM],EAX
+		JMP		keystatus
 
-; keyboard
+scrn320:
+		MOV		BX,0x13 ; VGA graphics 320x200x8bit color
+		MOV		AH,0x00
+		INT		0x10
+		MOV		BYTE [VMODE],8
+		MOV		WORD [SCRNX],320
+		MOV		WORD [SCRNY],200
+		MOV		DWORD [VRAM],0x000a0000
+
+; get keyboard LED status from BIOS
+keystatus:
 		MOV		AH,0x02
-		INT		0x16
+		INT		0x16 ; keyboard BIOS
 		MOV		[LEDS],AL
 
 		MOV		AL,0xff
