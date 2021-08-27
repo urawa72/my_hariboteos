@@ -34,7 +34,7 @@ void farjmp(int eip, int cs);
 struct FIFO32 {
   int *buf;
   int p, q, size, free, flags;
-	struct TASK *task;
+  struct TASK *task;
 };
 void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);
 int fifo32_put(struct FIFO32 *fifo, int data);
@@ -167,15 +167,15 @@ void sheet_free(struct SHEET *sht);
 /* timer.c */
 #define MAX_TIMER 500
 struct TIMER {
-	struct TIMER *next;
-	unsigned int timeout, flags;
-	struct FIFO32 *fifo;
-	int data;
+  struct TIMER *next;
+  unsigned int timeout, flags;
+  struct FIFO32 *fifo;
+  int data;
 };
 struct TIMERCTL {
-	unsigned int count, next;
-	struct TIMER *t0;
-	struct TIMER timers0[MAX_TIMER];
+  unsigned int count, next;
+  struct TIMER *t0;
+  struct TIMER timers0[MAX_TIMER];
 };
 extern struct TIMERCTL timerctl;
 void init_pit(void);
@@ -187,7 +187,9 @@ void inthandler20(int *esp);
 
 /* mtask.c */
 #define MAX_TASKS 1000
-#define TASK_GDT0 3 // from what number of GDT to assign TSS
+#define TASK_GDT0 3  // from what number of GDT to assign TSS
+#define MAX_TASKS_KV 100
+#define MAX_TASKLEVELS 3
 struct TSS32 {
   int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
   int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
@@ -195,19 +197,24 @@ struct TSS32 {
   int ldtr, iomap;
 };
 struct TASK {
-	int sel, flags;  // sel means number of GDT
-	int priority;
-	struct TSS32 tss;
+  int sel, flags;  // sel means number of GDT
+  int level, priority;
+  struct TSS32 tss;
+};
+struct TASKLEVEL {
+  int running;  // number of working tasks
+  int now;      // number of current working tasks
+  struct TASK *tasks[MAX_TASKS_KV];
 };
 struct TASKCTL {
-	int running;  // number of working tasks
-	int now; // which task is now working
-	struct TASK *tasks[MAX_TASKS];
-	struct TASK tasks0[MAX_TASKS];
+  int now_lv;      // current working level
+  char lv_change;  // whether change level when next task_switch
+  struct TASKLEVEL level[MAX_TASKLEVELS];
+  struct TASK tasks0[MAX_TASKS];
 };
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task, int priority);
+void task_run(struct TASK *task, int level, int priority);
 void task_switch(void);
 void task_sleep(struct TASK *task);
