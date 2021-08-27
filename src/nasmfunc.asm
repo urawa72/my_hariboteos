@@ -12,7 +12,7 @@ section .text
 		GLOBAL	asm_inthandler20, asm_inthandler21
 		GLOBAL	asm_inthandler27, asm_inthandler2c
 		GLOBAL	memtest_sub
-		GLOBAL	taskswitch3, taskswitch4
+		GLOBAL	farjmp
 		EXTERN	inthandler20, inthandler21
 		EXTERN	inthandler27, inthandler2c
 
@@ -201,10 +201,6 @@ mts_fin:
 		POP		EDI
 		RET
 
-taskswitch3:
-		JMP		3*8:0
-		RET
-
-taskswitch4:
-		JMP		4*8:0
+farjmp: ; void farjmp(int eip, int cs);
+		JMP		FAR [ESP+4]
 		RET
