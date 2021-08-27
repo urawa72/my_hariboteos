@@ -12,7 +12,7 @@ section .text
 		GLOBAL	asm_inthandler20, asm_inthandler21
 		GLOBAL	asm_inthandler27, asm_inthandler2c
 		GLOBAL	memtest_sub
-		GLOBAL	taskswitch4
+		GLOBAL	taskswitch3, taskswitch4
 		EXTERN	inthandler20, inthandler21
 		EXTERN	inthandler27, inthandler2c
 
@@ -199,6 +199,10 @@ mts_fin:
 		POP		EBX
 		POP		ESI
 		POP		EDI
+		RET
+
+taskswitch3:
+		JMP		3*8:0
 		RET
 
 taskswitch4:
