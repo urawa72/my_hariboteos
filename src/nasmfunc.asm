@@ -8,9 +8,11 @@ section .text
 		GLOBAL	io_load_eflags, io_store_eflags
 		GLOBAL	load_gdtr, load_idtr
 		GLOBAL	load_cr0, store_cr0
+		GLOBAL	load_tr
 		GLOBAL	asm_inthandler20, asm_inthandler21
 		GLOBAL	asm_inthandler27, asm_inthandler2c
 		GLOBAL	memtest_sub
+		GLOBAL	taskswitch4
 		EXTERN	inthandler20, inthandler21
 		EXTERN	inthandler27, inthandler2c
 
@@ -96,6 +98,10 @@ load_cr0:
 store_cr0:
 		MOV		EAX,[ESP+4]
 		MOV		CR0,EAX
+		RET
+
+load_tr:
+		LTR		[ESP+4]
 		RET
 
 asm_inthandler20:
@@ -193,4 +199,8 @@ mts_fin:
 		POP		EBX
 		POP		ESI
 		POP		EDI
+		RET
+
+taskswitch4:
+		JMP		4*8:0
 		RET
