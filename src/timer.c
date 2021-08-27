@@ -18,12 +18,12 @@ void init_pit(void) {
   for (i = 0; i < MAX_TIMER; i++) {
     timerctl.timers0[i].flags = 0;  // unused
   }
-  t              = timer_alloc();
-  t->timeout     = 0xffffffff;
-  t->flags       = TIMER_FLAGS_USING;
-  t->next        = 0;           // backmost
-  timerctl.t0    = t;           // set foremost
-  timerctl.next  = 0xffffffff;  // same as timeout
+  t             = timer_alloc();
+  t->timeout    = 0xffffffff;
+  t->flags      = TIMER_FLAGS_USING;
+  t->next       = 0;           // backmost
+  timerctl.t0   = t;           // set foremost
+  timerctl.next = 0xffffffff;  // same as timeout
   return;
 }
 
@@ -85,6 +85,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout) {
 void inthandler20(int *esp) {
   int i;
   struct TIMER *timer;
+  char ts = 0;
   io_out8(PIC0_OCW2, 0x60);  // notify PIC for IRQ-00 reception closed
   timerctl.count++;
   if (timerctl.next > timerctl.count) {
@@ -97,10 +98,17 @@ void inthandler20(int *esp) {
     }
     // timeout
     timer->flags = TIMER_FLAGS_ALLOC;
-    fifo32_put(timer->fifo, timer->data);
+    if (timer != mt_timer) {
+      fifo32_put(timer->fifo, timer->data);
+    } else {
+      ts = 1;  // mt_timer is timeout
+    }
     timer = timer->next;
   }
   timerctl.t0   = timer;
   timerctl.next = timerctl.t0->timeout;
+  if (ts != 0) {
+    mt_taskswitch();
+  }
   return;
 }

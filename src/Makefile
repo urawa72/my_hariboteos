@@ -1,5 +1,5 @@
 OBJS_BOOTPACK	= bootpack.o graphic.o dsctbl.o int.o fifo.o \
-								keyboard.o mouse.o memory.o sheet.o timer.o \
+								keyboard.o mouse.o memory.o sheet.o timer.o mtask.o \
 								nasmfunc.o hankaku.o mysprintf.o
 
 MAKE		= make -r
