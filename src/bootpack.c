@@ -52,7 +52,7 @@ void HariMain(void) {
   shtctl    = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   task_a    = task_init(memman);
   fifo.task = task_a;
-  task_run(task_a, 1, 0);
+  task_run(task_a, 1, 2);
 
   /* sht_back */
   sht_back = sheet_alloc(shtctl);
@@ -115,7 +115,6 @@ void HariMain(void) {
     // NOTE: The screen freezes without thw following code
     // my_sprintf(s, "");
     // putfonts8_asc_sht(sht_back, 200, 0, COL8_FFFFFF, COL8_008484, s, 1);
-
     io_cli();
     if (fifo32_status(&fifo) == 0) {
       task_sleep(task_a);
@@ -126,19 +125,29 @@ void HariMain(void) {
       if (256 <= i && i <= 511) {  // keyboard data
         my_sprintf(s, "%x", i - 256);
         putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-        if (i < 256 + 0x54) {
-          if (keytable[i - 256] != 0 && cursor_x < 144) {
-            s[0] = keytable[i - 256];
-            s[1] = 0;
-            putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
-            cursor_x += 8;
+        if (i < 0x54 + 256 && keytable[i - 256] != 0) {  // normal charactor
+          if (key_to == 0) {
+            if (cursor_x < 128) {
+              s[0] = keytable[i - 256];
+              s[1] = 0;
+              putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+              cursor_x += 8;
+            }
+          } else {  // to console
+            fifo32_put(&task_cons->fifo, keytable[i - 256] + 256);
           }
         }
-        if (i == 256 + 0x0e && cursor_x > 8) {  // backspace
-          putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
-          cursor_x -= 8;
+        if (i == 256 + 0x0e) {  // backspace
+          if (key_to == 0) {
+            if (cursor_x > 8) {
+              putfonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+              cursor_x -= 8;
+            }
+          } else {
+            fifo32_put(&task_cons->fifo, 8 + 256);
+          }
         }
-        if (i == 256 + 0x0f) { // tab
+        if (i == 256 + 0x0f) {  // tab
           if (key_to == 0) {
             key_to = 1;
             make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
@@ -291,34 +300,53 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c) {
 }
 
 void console_task(struct SHEET *sheet) {
-  struct FIFO32 fifo;
   struct TIMER *timer;
   struct TASK *task = task_now();
+  int i, fifobuf[128], cursor_x = 16, cursor_c = COL8_000000;
   char s[2];
 
-  int i, fifobuf[128], cursor_x = 8, cursor_c = COL8_000000;
-  fifo32_init(&fifo, 128, fifobuf, task);
-
+  fifo32_init(&task->fifo, 128, fifobuf, task);
   timer = timer_alloc();
-  timer_init(timer, &fifo, 1);
+  timer_init(timer, &task->fifo, 1);
   timer_settime(timer, 50);
+
+  // display prompt
+  putfonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
   for (;;) {
     io_cli();
-    if (fifo32_status(&fifo) == 0) {
+    if (fifo32_status(&task->fifo) == 0) {
       task_sleep(task);
       io_sti();
     } else {
-      i = fifo32_get(&fifo);
+      i = fifo32_get(&task->fifo);
       io_sti();
-      if (i <= 1) {
-        timer_init(timer, &fifo, 0);
-        cursor_c = COL8_FFFFFF;
-      } else {
-        timer_init(timer, &fifo, 1);
-        cursor_c = COL8_000000;
+      if (i <= 1) {  // for cursor
+        if (i != 0) {
+          timer_init(timer, &task->fifo, 0);
+          cursor_c = COL8_FFFFFF;
+        } else {
+          timer_init(timer, &task->fifo, 1);
+          cursor_c = COL8_000000;
+        }
+        timer_settime(timer, 50);
       }
-      timer_settime(timer, 50);
+      if (256 <= i && i <= 511) {  // for keyboard
+        if (i == 8 + 256) {
+          if (cursor_x > 16) {
+            putfonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
+            cursor_x -= 8;
+          }
+        } else {
+          if (cursor_x < 240) {
+            s[0] = i - 256;
+            s[1] = 0;
+            putfonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
+            cursor_x += 8;
+          }
+        }
+      }
+      // redisplay cursor
       boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
       sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
     }
