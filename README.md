@@ -95,3 +95,7 @@ for(;;) {
   ...
 }
 ```
+
+### 18_day
+
+`#include <string.h>`ができないため、自作の`strcmp`関数を用意する。[Apple のオープンソースサイト](https://opensource.apple.com/source/Libc/Libc-262/ppc/gen/strcmp.c.auto.html)のコードを流用する。
