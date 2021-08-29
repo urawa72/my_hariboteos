@@ -58,7 +58,7 @@ void HariMain(void) {
   io_out8(PIC1_IMR, 0xef);  // allow mouse (11101111)
   fifo32_init(&keycmd, 32, keycmd_buf, 0);
 
-      memtotal = memtest(0x00400000, 0xbfffffff);
+  memtotal = memtest(0x00400000, 0xbfffffff);
   memman_init(memman);
   memman_free(memman, 0x00001000, 0x0009e000);  // 0x0001000 - 0x0009effff
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
@@ -188,10 +188,13 @@ void HariMain(void) {
             key_to = 1;
             make_wtitle8(buf_win, sht_win->bxsize, "task_a", 0);
             make_wtitle8(buf_cons, sht_cons->bxsize, "console", 1);
+            cursor_c = -1;
+            boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cursor_x, 28, cursor_x + 7, 43);
           } else {
             key_to = 0;
             make_wtitle8(buf_win, sht_win->bxsize, "task_a", 1);
             make_wtitle8(buf_cons, sht_cons->bxsize, "console", 0);
+            cursor_c = COL8_000000;
           }
           sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
           sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
@@ -223,15 +226,17 @@ void HariMain(void) {
           fifo32_put(&keycmd, KEYCMD_LED);
           fifo32_put(&keycmd, key_leds);
         }
-        if (i == 256 + 0xfa) { // keyboard has received data
+        if (i == 256 + 0xfa) {  // keyboard has received data
           keycmd_wait = -1;
         }
-        if (i == 256 + 0xfe) { // keyboard has not received data
+        if (i == 256 + 0xfe) {  // keyboard has not received data
           wait_KBC_sendready();
           io_out8(PORT_KEYDAT, keycmd_wait);
         }
-        // redisplay cursor
-        boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+        if (cursor_c >= 0) {
+          // redisplay cursor
+          boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+        }
         sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
       } else if (512 <= i && i <= 767) {  // mouse data
         if (mouse_decode(&mdec, i - 512) != 0) {
@@ -272,14 +277,20 @@ void HariMain(void) {
       } else if (i <= 1) {  // cursor timer
         if (i != 0) {
           timer_init(timer, &fifo, 0);
-          cursor_c = COL8_000000;
+          if (cursor_c >= 0) {
+            cursor_c = COL8_000000;
+          }
         } else {
           timer_init(timer, &fifo, 1);
-          cursor_c = COL8_FFFFFF;
+          if (cursor_c >= 0) {
+            cursor_c = COL8_FFFFFF;
+          }
         }
         timer_settime(timer, 50);
-        boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
-        sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        if (cursor_c >= 0) {
+          boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+          sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        }
       }
     }
   }
