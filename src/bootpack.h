@@ -30,6 +30,12 @@ void asm_inthandler2c(void);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 void farjmp(int eip, int cs);
 
+/* mysprintf.c */
+extern void my_sprintf(char *str, const char *fmt, ...);
+
+/* mystrcmp.c */
+extern int my_strcmp(const char *s1, const char *s2);
+
 /* fifo.c */
 struct FIFO32 {
   int *buf;
@@ -48,7 +54,6 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 void init_screen8(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
-extern void my_sprintf(char *str, const char *fmt, ...);
 void init_mouse_cursor8(char *mouse, char bc);
 void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize);
 #define COL8_000000 0
