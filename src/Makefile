@@ -37,7 +37,7 @@ haribote.sys : asmhead.bin bootpack.hrb
 
 haribote.img: ipl10.bin haribote.sys
 	mformat -f 1440 -C -B ipl10.bin -i haribote.img ::
-	mcopy -i haribote.img haribote.sys ::
+	mcopy -i haribote.img haribote.sys ipl10.asm ::
 
 # General rule
 
