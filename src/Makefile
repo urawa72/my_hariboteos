@@ -1,6 +1,6 @@
 OBJS_BOOTPACK	= bootpack.o graphic.o dsctbl.o int.o fifo.o \
 								keyboard.o mouse.o memory.o sheet.o timer.o mtask.o \
-								nasmfunc.o hankaku.o mysprintf.o mystrcmp.o
+								nasmfunc.o hankaku.o mysprintf.o mystrcmp.o mystrncmp.o
 
 MAKE		= make -r
 DEL			= rm -rf

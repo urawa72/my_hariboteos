@@ -470,7 +470,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
               }
             }
             cursor_y = cons_newline(cursor_y, sheet);
-          } else if (cmdline[0] == 'c' && cmdline[1] == 'a' && cmdline[2] == 't' && cmdline[3] == ' ') {
+          } else if (my_strncmp(cmdline, "cat ", 4) == 0) {
             // cat command
             for (y = 0; y < 11; y++) {
               s[y] = ' ';
@@ -504,6 +504,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
             type_next_file:
               x++;
             }
+            // file exists
             if (x < 224 && finfo[x].name[0] != 0x00) {
               y = finfo[x].size;
               p = (char *)(finfo[x].clustno * 512 + 0x003e00 + ADR_DISKIMG);
@@ -511,13 +512,31 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
               cursor_x = 8;
               for (x = 0; x < y; x++) {
                 s[0] = p[x];
-                s[0] = p[x];
                 s[1] = 0;
-                putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
-                cursor_x += 8;
-                if (cursor_x == 8 + 240) {
+                if (s[0] == 0x09) { // tab
+                  for (; ; ) {
+                    putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ", 1);
+                    cursor_x += 8;
+                    if (cursor_x == 8 + 240) {
+                      cursor_x = 8;
+                      cursor_y = cons_newline(cursor_y, sheet);
+                    }
+                    if (((cursor_x - 8) & 0x1f) == 0) {
+                      break;
+                    }
+                  }
+                } else if (s[0] == 0x0a) {  // new line
                   cursor_x = 8;
                   cursor_y = cons_newline(cursor_y, sheet);
+                } else if(s[0] == 0x0d) {  // carriage return
+                  // do nothing
+                } else {
+                  putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s, 1);
+                  cursor_x += 8;
+                  if (cursor_x == 8 + 240) {
+                    cursor_x = 8;
+                    cursor_y = cons_newline(cursor_y, sheet);
+                  }
                 }
               }
             } else {

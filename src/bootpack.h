@@ -37,6 +37,9 @@ extern void my_sprintf(char *str, const char *fmt, ...);
 /* mystrcmp.c */
 extern int my_strcmp(const char *s1, const char *s2);
 
+/* mystrncmp.c */
+extern int my_strncmp(const char *s1, const char *s2, int n);
+
 /* fifo.c */
 struct FIFO32 {
   int *buf;
