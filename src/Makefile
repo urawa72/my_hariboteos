@@ -16,13 +16,16 @@ default:
 # File generation rule
 
 ipl10.bin: ipl10.asm
-	nasm ipl10.asm -o ipl10.bin -l ipl10.lst
+	nasm $< -o $@ -l ipl10.lst
 
 asmhead.bin: asmhead.asm
 	nasm $< -o $@ -l asmhead.lst
 
 nasmfunc.o: nasmfunc.asm
 	nasm -g -f elf $< -o $@ -l nasmfunc.lst
+
+hlt.hrb: hlt.asm
+	nasm $< -o $@ -l hlt.lst
 
 convHankakuTxt: convHankakuTxt.c
 	gcc $< -o $@
@@ -36,9 +39,9 @@ bootpack.hrb: $(OBJS_BOOTPACK) os.lds
 haribote.sys : asmhead.bin bootpack.hrb
 	cat asmhead.bin bootpack.hrb > haribote.sys
 
-haribote.img: ipl10.bin haribote.sys
+haribote.img: ipl10.bin haribote.sys hlt.hrb
 	mformat -f 1440 -C -B ipl10.bin -i haribote.img ::
-	mcopy -i haribote.img haribote.sys ipl10.asm ::
+	mcopy -i haribote.img haribote.sys ipl10.asm hlt.hrb ::
 
 # General rule
 
