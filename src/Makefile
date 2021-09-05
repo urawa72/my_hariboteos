@@ -27,6 +27,9 @@ nasmfunc.o: nasmfunc.asm
 hello.hrb: hello.asm
 	nasm $< -o $@ -l hello.lst
 
+hello2.hrb: hello2.asm
+	nasm $< -o $@ -l hello.lst
+
 convHankakuTxt: convHankakuTxt.c
 	gcc $< -o $@
 
@@ -39,9 +42,9 @@ bootpack.hrb: $(OBJS_BOOTPACK) os.lds
 haribote.sys : asmhead.bin bootpack.hrb
 	cat asmhead.bin bootpack.hrb > haribote.sys
 
-haribote.img: ipl10.bin haribote.sys hello.hrb
+haribote.img: ipl10.bin haribote.sys hello.hrb hello2.hrb
 	mformat -f 1440 -C -B ipl10.bin -i haribote.img ::
-	mcopy -i haribote.img haribote.sys ipl10.asm hello.hrb ::
+	mcopy -i haribote.img haribote.sys ipl10.asm hello.hrb hello2.hrb ::
 
 # General rule
 
