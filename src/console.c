@@ -7,11 +7,11 @@ void console_task(struct SHEET *sheet, unsigned int memtotal) {
   int i, fifobuf[128], *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
   struct CONSOLE cons;
   char cmdline[30];
-  cons.sht   = sheet;
-  cons.cur_x = 8;
-  cons.cur_y = 28;
-  cons.cur_c = -1;
-  *((int *) 0x0fec) = (int) &cons;
+  cons.sht         = sheet;
+  cons.cur_x       = 8;
+  cons.cur_y       = 28;
+  cons.cur_c       = -1;
+  *((int *)0x0fec) = (int)&cons;
 
   fifo32_init(&task->fifo, 128, fifobuf, task);
   timer = timer_alloc();
@@ -145,12 +145,12 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
     cmd_ls(cons);
   } else if (my_strncmp(cmdline, "cat ", 4) == 0) {
     cmd_cat(cons, fat, cmdline);
-  } else if (my_strcmp(cmdline, "hlt") == 0) {
-    cmd_hlt(cons, fat);
   } else if (cmdline[0] != 0) {
-    putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
-    cons_newline(cons);
-    cons_newline(cons);
+    if (cmd_app(cons, fat, cmdline) == 0) {
+      putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "Bad command.", 12);
+      cons_newline(cons);
+      cons_newline(cons);
+    }
   }
   return;
 }
@@ -229,11 +229,33 @@ void cmd_cat(struct CONSOLE *cons, int *fat, char *cmdline) {
   return;
 }
 
-void cmd_hlt(struct CONSOLE *cons, int *fat) {
-  struct MEMMAN *memman          = (struct MEMMAN *)MEMMAN_ADDR;
-  struct FILEINFO *finfo         = file_search("HLT.HRB", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline) {
+  struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+  struct FILEINFO *finfo;
   struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *)ADR_GDT;
-  char *p;
+  char name[18], *p;
+  int i;
+
+  // make filename from cmdline
+  for (i = 0; i < 13; i++) {
+    if (cmdline[i] <= ' ') {
+      break;
+    }
+    name[i] = cmdline[i];
+  }
+  name[i] = 0;
+
+  // search file
+  finfo = file_search(name, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+  if (finfo == 0 && name[i - 1] != '.') {
+    name[i]     = '.';
+    name[i + 1] = 'H';
+    name[i + 2] = 'R';
+    name[i + 3] = 'B';
+    name[i + 4] = 0;
+    finfo       = file_search(name, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+  }
+
   if (finfo != 0) {
     // file found
     p = (char *)memman_alloc_4k(memman, finfo->size);
@@ -241,11 +263,10 @@ void cmd_hlt(struct CONSOLE *cons, int *fat) {
     set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
     farcall(0, 1003 * 8);
     memman_free_4k(memman, (int)p, finfo->size);
-  } else {
-    // file not found
-    putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
     cons_newline(cons);
+    cons_newline(cons);
+    return 1;
   }
-  cons_newline(cons);
-  return;
+  // file not found
+  return 0;
 }
