@@ -34,7 +34,7 @@ hankaku.c: hankaku.txt convHankakuTxt
 	./convHankakuTxt
 
 bootpack.hrb: $(OBJS_BOOTPACK) os.lds
-	gcc $(CFLAGS) -march=i486 -T os.lds -g $(OBJS_BOOTPACK) -o $@
+	gcc $(CFLAGS) -march=i486 -T os.lds -Xlinker -Map=bootpack.map -g $(OBJS_BOOTPACK) -o $@
 
 haribote.sys : asmhead.bin bootpack.hrb
 	cat asmhead.bin bootpack.hrb > haribote.sys
@@ -71,3 +71,4 @@ clean:
 	-$(DEL) *.lst
 	-$(DEL) *.hrb
 	-$(DEL) *.img
+	-$(DEL) *.map
