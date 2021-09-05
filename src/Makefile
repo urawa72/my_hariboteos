@@ -62,9 +62,12 @@ asm:
 img:
 	$(MAKE) haribote.img
 	@chmod 777 haribote.img
+	$(MAKE) clean
 
-run:
+build:
 	$(DOCKER) run --rm -v `pwd`:/haribos haribos:latest make img
+
+run: build
 	qemu-system-i386 -m 32M -drive file=haribote.img,format=raw,if=floppy -boot a
 
 clean:
@@ -73,5 +76,6 @@ clean:
 	-$(DEL) *.sys
 	-$(DEL) *.lst
 	-$(DEL) *.hrb
-	-$(DEL) *.img
 	-$(DEL) *.map
+	-$(DEL) convHankakuTxt
+	-$(DEL) hankaku.c

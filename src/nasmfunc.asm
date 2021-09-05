@@ -139,7 +139,7 @@ asm_inthandler21:
 		POP		ES
 		IRETD
 
-asm_inthandler27
+asm_inthandler27:
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
