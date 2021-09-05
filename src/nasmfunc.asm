@@ -1,5 +1,6 @@
 ; nasmfunc.asm
 ; TAB=4
+[BITS 32]
 
 section .text
 		GLOBAL	io_hlt, io_cli, io_sti, io_stihlt
@@ -214,4 +215,4 @@ asm_cons_putchar:
 		PUSH	DWORD [0x0fec]
 		CALL	cons_putchar
 		ADD		ESP,12
-		RET
+		RETF
